@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Index(columns: ['username'], name: "username_idx")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -29,7 +30,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(targetEntity: Token::class, mappedBy: "user")]
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: Token::class)]
+    /** @var Collection<Token> */
     private Collection $tokens;
 
     public function __construct()
@@ -107,6 +109,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
+    /** @return Collection<Token> */
     public function getTokens(): Collection
     {
         return $this->tokens;

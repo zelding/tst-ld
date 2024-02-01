@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Invite token
  */
 #[ORM\Entity(repositoryClass: TokenRepository::class)]
+#[ORM\Index(name: "validaity_idx", columns: ['valid_until'])]
 class Token
 {
     #[ORM\Id]
@@ -25,8 +26,7 @@ class Token
     #[ORM\Column]
     private ?\DateTimeImmutable $valid_until = null;
 
-    #[ORM\Column]
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "tokens")]
     private User|null $user;
 
     public function getId(): ?int
