@@ -49,6 +49,9 @@ final class Version20240201154511 extends AbstractMigration
 
         $this->addSql('ALTER TABLE token ADD CONSTRAINT FK_5F37A13BC39BEDB9 FOREIGN KEY (user_from) REFERENCES user (id)');
         $this->addSql('ALTER TABLE token ADD CONSTRAINT FK_5F37A13BCFD06601 FOREIGN KEY (user_to) REFERENCES user (id)');
+
+
+        $this->addSql('INSERT INTO user (username, roles, password) VALUES (`test_user_01`, `[]`, `$2y$13$ZHqJ4JjhGvt.G8V8iaVHpOumZXcjM0kf7lmsDG73AFZ8iNDypYmcy`)');
     }
 
     public function down(Schema $schema): void

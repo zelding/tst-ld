@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\Token;
+use App\Entity\Invite;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class InviteService
@@ -14,17 +14,17 @@ class InviteService
         $this->tokenService->createNewToken($user);
     }
 
-    public function acceptInvite(UserInterface $user, Token $token)
+    public function acceptInvite(UserInterface $user, Invite $token)
     {
 
     }
 
-    public function cancelInvite(UserInterface $user, Token $token)
+    public function cancelInvite(UserInterface $user, Invite $token)
     {
 
     }
 
-    public function denyInvite(UserInterface $user, Token $token)
+    public function denyInvite(UserInterface $user, Invite $token)
     {
 
     }

@@ -11,20 +11,28 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
-class ProfileController extends AbstractController
+class ProfileController extends BaseController
 {
-    #[Route('/profile', name: 'app_profile')]
+    #[Route('/me', name: 'app_profile', methods: ['GET'])]
     public function index(Request $request, #[CurrentUser] ?User $user): JsonResponse
     {
+        if(!$user) {
+            return $this->authError();
+        }
+
         return $this->json([
             'message' => 'Welcome to your new controller!',
             'path' => 'src/Controller/ProfileController.php',
         ]);
     }
 
-    #[Route('/profile/invite', name: 'app_profile_invite')]
+    #[Route('/me', name: 'app_profile_invite', methods: ['POST'])]
     public function invite(Request $request, #[CurrentUser] ?User $user): JsonResponse
     {
+        if(!$user) {
+            return $this->authError();
+        }
+
         if ( !$request->query->get('user_id') ) {
             return $this->json([], Response::HTTP_BAD_REQUEST);
         }

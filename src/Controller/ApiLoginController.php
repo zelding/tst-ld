@@ -12,7 +12,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class ApiLoginController extends AbstractController
 {
-    #[Route('/api/login', name: 'app_api_login', methods: ['POST', 'GET'])]
+    #[Route('/login', name: 'api_login', methods: ['POST', 'GET'])]
     public function index(#[CurrentUser] ?User $user, TokenService $tokenService): JsonResponse
     {
         if (!$user) {

@@ -30,20 +30,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: "inviter", targetEntity: Token::class)]
+    #[ORM\OneToMany(mappedBy: "inviter", targetEntity: Invite::class)]
     #[ORM\JoinColumn(name: "id", referencedColumnName: "user_from")]
-    /** @var Collection<Token> */
+    /** @var Collection<Invite> */
     private Collection $invites;
 
-    #[ORM\OneToMany(mappedBy: "invitee", targetEntity: Token::class)]
+    #[ORM\OneToMany(mappedBy: "invitee", targetEntity: Invite::class)]
     #[ORM\JoinColumn(name: "id", referencedColumnName: "user_to")]
-    /** @var Collection<Token> */
+    /** @var Collection<Invite> */
     private Collection $invited;
 
-    public function __construct()
+    public function __construct(?string $username = null, ?string $password = null)
     {
         $this->invites = new ArrayCollection();
         $this->invited = new ArrayCollection();
+
+        if ($username) {
+            $this->setUsername($username);
+        }
+
+        if ($password) {
+            $this->setPassword($password);
+        }
     }
 
     public function getId(): ?int

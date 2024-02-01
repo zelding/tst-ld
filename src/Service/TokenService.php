@@ -2,8 +2,10 @@
 
 namespace App\Service;
 
-use App\Entity\Token;
-use App\Repository\TokenRepository;
+use App\Entity\Invite;
+use App\Entity\User;
+use App\Model\InviteStatus;
+use App\Repository\InviteRepository;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,17 +15,17 @@ class TokenService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserRepository $userRepository,
-        private readonly TokenRepository $tokenRepository)
+        private readonly UserRepository         $userRepository,
+        private readonly InviteRepository       $tokenRepository)
     {
     }
 
-    public function createNewToken(UserInterface $user): Token
+    public function createNewToken(User $user, User $otherUser): Invite
     {
-        $user = $this->userRepository->find($user->getUserIdentifier());
-
-        $token = new Token();
-        $token->setUser($user);
+        $token = new Invite();
+        $token->setInviter($user);
+        $token->setInvitee($otherUser);
+        $token->setStatus(InviteStatus::INIT);
         $token->setValidUntil(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', 'now'));
         $token->setHash($this->generateUniqueHash());
 
@@ -31,12 +33,12 @@ class TokenService
         $this->entityManager->flush();
     }
 
-    public function validateToken(UserInterface $user, Token $token ): bool
+    public function validateToken(UserInterface $user, Invite $token ): bool
     {
 
     }
 
-    public function useToken(UserInterface $user, Token $token)
+    public function useToken(UserInterface $user, Invite $token)
     {
 
         $this->entityManager->flush();

@@ -2,16 +2,17 @@
 
 namespace App\Entity;
 
-use App\Repository\TokenRepository;
+use App\Model\InviteStatus;
+use App\Repository\InviteRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Invite token
  */
-#[ORM\Entity(repositoryClass: TokenRepository::class)]
+#[ORM\Entity(repositoryClass: InviteRepository::class)]
 #[ORM\Index(name: "validaity_idx", columns: ['valid_until'])]
-class Token
+class Invite
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -22,7 +23,7 @@ class Token
     private ?string $hash = null;
 
     #[ORM\Column]
-    private int $status = 0;
+    private InviteStatus $status = InviteStatus::INIT;
 
     #[ORM\Column]
     private ?DateTimeImmutable $created_at  = null;
@@ -38,7 +39,9 @@ class Token
     #[ORM\JoinColumn(name: "user_to", referencedColumnName: "id")]
     private User|null $invitee;
 
-    public function __construct() {
+    public function __construct(User $inviter, User $invitee) {
+        $this->setInviter($inviter);
+        $this->setInvitee($invitee);
         $this->setCreatedAt(new DateTimeImmutable());
     }
 
@@ -59,12 +62,12 @@ class Token
         return $this;
     }
 
-    public function getStatus(): int
+    public function getStatus(): InviteStatus
     {
         return $this->status;
     }
 
-    public function setStatus(int $status): void
+    public function setStatus(InviteStatus $status): void
     {
         $this->status = $status;
     }
