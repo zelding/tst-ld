@@ -1,8 +1,21 @@
 # Readme
 
-Arch: [symfony-docker](https://github.com/dunglas/symfony-docker) 
+Architecture template: [symfony-docker](https://github.com/dunglas/symfony-docker) 
 
-## install
-- clone
-- run `docker compose --env-file=.env.local build --no-cache --pull`
-- run `docker compose --env-file=.env.local up -d`
+## Install
+- clone this repo
+
+### PHPStorm
+- run the "Loudly-demo" Configuration
+
+### Manual
+- run `docker compose build --no-cache --pull`
+- run `docker compose up -d`
+
+## Run tests
+
+### PHPStorm
+- run the "Tests" Configuration
+
+### Manual
+- run `php vendor/bin/phpunit`
