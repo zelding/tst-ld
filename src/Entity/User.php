@@ -30,13 +30,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: "user", targetEntity: Token::class)]
+    #[ORM\OneToMany(mappedBy: "inviter", targetEntity: Token::class)]
+    #[ORM\JoinColumn(name: "id", referencedColumnName: "user_from")]
     /** @var Collection<Token> */
-    private Collection $tokens;
+    private Collection $invites;
+
+    #[ORM\OneToMany(mappedBy: "invitee", targetEntity: Token::class)]
+    #[ORM\JoinColumn(name: "id", referencedColumnName: "user_to")]
+    /** @var Collection<Token> */
+    private Collection $invited;
 
     public function __construct()
     {
-        $this->tokens = new ArrayCollection();
+        $this->invites = new ArrayCollection();
+        $this->invited = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -109,10 +116,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    /** @return Collection<Token> */
-    public function getTokens(): Collection
+    public function getInvites(): Collection
     {
-        return $this->tokens;
+        return $this->invites;
     }
 
+    public function getInvited(): Collection
+    {
+        return $this->invited;
+    }
 }

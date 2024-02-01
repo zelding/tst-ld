@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\TokenRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -21,13 +22,25 @@ class Token
     private ?string $hash = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $created_at = null;
+    private int $status = 0;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $valid_until = null;
+    private ?DateTimeImmutable $created_at  = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "tokens")]
-    private User|null $user;
+    #[ORM\Column]
+    private ?DateTimeImmutable $valid_until = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "invites")]
+    #[ORM\JoinColumn(name: "user_from", referencedColumnName: "id")]
+    private User|null $inviter;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "invited")]
+    #[ORM\JoinColumn(name: "user_to", referencedColumnName: "id")]
+    private User|null $invitee;
+
+    public function __construct() {
+        $this->setCreatedAt(new DateTimeImmutable());
+    }
 
     public function getId(): ?int
     {
@@ -46,39 +59,62 @@ class Token
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getStatus(): int
+    {
+        return $this->status;
+    }
+
+    public function setStatus(int $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->created_at;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $created_at): static
+    public function setCreatedAt(DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
 
         return $this;
     }
 
-    public function getValidUntil(): ?\DateTimeImmutable
+    public function getValidUntil(): ?DateTimeImmutable
     {
         return $this->valid_until;
     }
 
-    public function setValidUntil(\DateTimeImmutable $valid_until): static
+    public function setValidUntil(DateTimeImmutable $valid_until): static
     {
         $this->valid_until = $valid_until;
 
         return $this;
     }
 
-    public function getUser(): User
+    public function getInviter(): ?User
     {
-        return $this->user;
+        return $this->inviter;
     }
 
-    public function setUser(User $user): static
+    public function setInviter(?User $inviter): static
     {
-        $this->user = $user;
+        $this->inviter = $inviter;
 
         return $this;
     }
+
+    public function getInvitee(): ?User
+    {
+        return $this->invitee;
+    }
+
+    public function setInvitee(?User $invitee): static
+    {
+        $this->invitee = $invitee;
+
+        return $this;
+    }
+
 }

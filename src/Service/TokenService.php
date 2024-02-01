@@ -3,23 +3,47 @@
 namespace App\Service;
 
 use App\Entity\Token;
-use App\Entity\User;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
+use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class TokenService
 {
-    private UserRepository $userRepository;
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserRepository $userRepository,
+        private readonly TokenRepository $tokenRepository)
+    {
+    }
 
-    private TokenRepository $tokenRepository;
+    public function createNewToken(UserInterface $user): Token
+    {
+        $user = $this->userRepository->find($user->getUserIdentifier());
 
-    public function createNewToken(User $user): Token
+        $token = new Token();
+        $token->setUser($user);
+        $token->setValidUntil(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', 'now'));
+        $token->setHash($this->generateUniqueHash());
+
+        $this->entityManager->persist($token);
+        $this->entityManager->flush();
+    }
+
+    public function validateToken(UserInterface $user, Token $token ): bool
     {
 
     }
 
-    public function validateToken(User $user): Token
+    public function useToken(UserInterface $user, Token $token)
     {
 
+        $this->entityManager->flush();
+    }
+
+    protected function generateUniqueHash(): string
+    {
+        return hash('haval160,4', uniqid("", true));
     }
 }
