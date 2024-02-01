@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+    title: Loudly test app
+    description: |
+        Made by Kristof Dekany on 2024-02-01
+    contact:
+        email: kristof.dekany.hu@gmail.com
+    version: 1.0.0
+
+externalDocs:
+    description: Find our more about me
+    url: zelding.github.io
+
+paths:
+    /:
+        get:
+            summary: landing page
+            description: the page that greets the uninvited
+            responses:
+                200:
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+                500:
+                    description: Internal error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+    /login:
+        post:
+            summary:     invite a new person
+            description: create a new invitation
+            security:
+                - api_key: []
+            requestBody:
+                description: The other user you want to invite
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Auth'
+            responses:
+                200:
+                    description: Auth success
+    /me:
+        get:
+            summary: current user profile
+            description: list invited and invitees
+            security:
+             - bearer_token: []
+            responses:
+                200:
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    friends:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/User'
+                                    invited:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/User'
+                                    invited_by:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/User'
+                401:
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                403:
+                    description: Forbidden
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                500:
+                    description: Internal error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            summary: invite a new person
+            description: create a new invitation
+            security:
+             - bearer_token: []
+            requestBody:
+                description: The other user you want to invite
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+            responses:
+                201:
+                    description: Created
+                401:
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                403:
+                    description: Forbidden
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                500:
+                    description: Internal error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+    /me/answer:
+        put:
+            summary: respond to an invitation
+            description: accept or reject an invitation
+            security:
+             - bearer_token: []
+            requestBody:
+                description: The other user you want to invite
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                accept:
+                                    type: boolean
+            responses:
+                200:
+                    description: Updated
+                400:
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                401:
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                403:
+                    description: Forbidden
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                500:
+                    description: Internal error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        delete:
+            summary:     Delete a sent request
+            description: Unsend an invitation before it is accepted
+            security:
+             - bearer_token: []
+            responses:
+                204:
+                    description: Deleted
+                400:
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                401:
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                403:
+                    description: Forbidden
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                500:
+                    description: Internal error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+components:
+    schemas:
+        Auth:
+            type: object
+            properties:
+                username:
+                    type: string
+                password:
+                    type: string
+                    description: apiKey
+
+        User:
+            type: object
+            properties:
+                username:
+                    type: string
+
+        Invite:
+            type: object
+            properties:
+                inviter:
+                    $ref: '#/components/schemas/User'
+                invitee:
+                    $ref: '#/components/schemas/User'
+                invited_at:
+                    type: string
+                    format: datetime
+                    example: "2024-12-31 18:56:59"
+
+        Error:
+            type: object
+            properties:
+                message:
+                    type: string
+                code:
+                    type: integer
+                    format: uint16
+
+    securitySchemes:
+        api_key:
+            type:   http
+            scheme: basic
+
+        bearer_token:
+            type:   http
+            scheme: bearer
+            in: query
