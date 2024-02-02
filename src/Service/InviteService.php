@@ -23,37 +23,6 @@ class InviteService
         private readonly EntityManagerInterface $entityManager
     ) {}
 
-    /** @throws ORMException|AppException */
-    public function invite(User $user, string $userId): Invite
-    {
-        $otherUser = $this->userRepository->findOneByUsername($userId);
-
-        if ( !$otherUser ) {
-            throw new AppException("Missing target connection", 404);
-        }
-
-        if ($found = $this->inviteRepository->findExistingBetween($user, $otherUser)) {
-
-            if ( $found->getStatus() === InviteStatus::BLOCKED ) {
-                throw new AppException("Blocked connection", 409);
-            }
-
-            throw new AppException("Already invited or Invalid target", 406);
-        }
-
-        $invite = new Invite($user, $otherUser);
-        $invite->setStatus(InviteStatus::SENT);
-        $invite->setValidUntil(new DateTimeImmutable());
-        $invite->setHash($this->generateInviteHash());
-
-        $this->entityManager->persist($invite);
-        $this->entityManager->flush();
-
-        // trigger messenger
-
-        return $invite;
-    }
-
     public function getUserInviteDataForProfile(User $user): array
     {
         $userData = $this->userRepository->getUserWithInvites($user);
@@ -91,6 +60,37 @@ class InviteService
         }
 
         return $returnData;
+    }
+
+    /** @throws ORMException|AppException */
+    public function invite(User $user, string $userId): Invite
+    {
+        $otherUser = $this->userRepository->findOneByUsername($userId);
+
+        if ( !$otherUser ) {
+            throw new AppException("Missing target connection", 404);
+        }
+
+        if ($found = $this->inviteRepository->findExistingBetween($user, $otherUser)) {
+            if ( $found->getStatus() === InviteStatus::BLOCKED ) {
+                throw new AppException("Blocked connection", 409);
+            }
+
+            throw new AppException("Already invited or Invalid target", 406);
+        }
+
+        $invite = new Invite($user, $otherUser);
+
+        $invite->setStatus(InviteStatus::SENT);
+        $invite->setValidUntil(new DateTimeImmutable());
+        $invite->setHash($this->generateInviteHash());
+
+        $this->entityManager->persist($invite);
+        $this->entityManager->flush();
+
+        // trigger messenger
+
+        return $invite;
     }
 
     /** @throws AppException|ORMException */
@@ -155,7 +155,7 @@ class InviteService
         return $invite;
     }
 
-    /** @throws RuntimeException */
+    /** @throws RuntimeException|ORMException */
     protected function generateInviteHash(): string
     {
         $counter = 0;

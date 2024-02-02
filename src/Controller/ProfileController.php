@@ -24,12 +24,7 @@ class ProfileController extends BaseController
             return $this->authError();
         }
 
-        try {
-            return $this->json($this->inviteService->getUserInviteDataForProfile($user));
-        }
-        catch(ORMException $exception) {
-
-        }
+        return $this->json($this->inviteService->getUserInviteDataForProfile($user));
     }
 
     #[Route('/me', name: 'app_profile_invite', methods: ['POST'])]

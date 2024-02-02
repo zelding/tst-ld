@@ -2,7 +2,6 @@
 
 namespace App\Tests\Unit;
 
-use App\Entity\Invite;
 use App\Entity\User;
 use App\Service\InviteService;
 use PHPUnit\Framework\TestCase;
@@ -15,8 +14,6 @@ class InviteServiceTest extends TestCase
 
         $user1 = new User('user1');
         $user2 = new User('user2');
-
-        $invite1 = new Invite($user1, $user2);
 
         $inviteSvc = new InviteService(
             null, null, null
