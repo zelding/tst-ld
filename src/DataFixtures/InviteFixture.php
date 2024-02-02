@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Invite;
 use App\Entity\User;
+use App\Model\InviteStatus;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -26,6 +27,7 @@ class InviteFixture extends Fixture implements DependentFixtureInterface
 
             $invite = new Invite($inviter, $invitee);
             $invite->setHash(hash('crc32', $i));
+            $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
             $invite->setValidUntil($long);
 
             $manager->persist($invite);
@@ -39,6 +41,7 @@ class InviteFixture extends Fixture implements DependentFixtureInterface
 
             $invite = new Invite($invitee, $inviter);
             $invite->setHash(hash('crc32', $i));
+            $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
             $invite->setValidUntil($long);
 
             $manager->persist($invite);
