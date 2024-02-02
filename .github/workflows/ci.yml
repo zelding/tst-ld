@@ -45,6 +45,9 @@ jobs:
         name: Check HTTPS reachability
         run: curl -vk -o /dev/null https://localhost
       -
+        name: force orm pack in - lol
+        run: docker compose exec -T php composer require symfony/orm-pack
+      -
         name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create
       -
