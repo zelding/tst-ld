@@ -24,9 +24,15 @@ class InviteService
     ) {}
 
     /** @throws ORMException|AppException */
-    public function invite(User $user, User $suer): Invite
+    public function invite(User $user, string $userId): Invite
     {
-        if ($found = $this->inviteRepository->findExistingBetween($user, $suer)) {
+        $otherUser = $this->userRepository->findOneByUsername($userId);
+
+        if ( !$otherUser ) {
+            throw new AppException("Missing target connection", 404);
+        }
+
+        if ($found = $this->inviteRepository->findExistingBetween($user, $otherUser)) {
 
             if ( $found->getStatus() === InviteStatus::BLOCKED ) {
                 throw new AppException("Blocked connection", 409);
@@ -35,13 +41,15 @@ class InviteService
             throw new AppException("Already invited or Invalid target", 406);
         }
 
-        $invite = new Invite($user, $suer);
+        $invite = new Invite($user, $otherUser);
         $invite->setStatus(InviteStatus::SENT);
         $invite->setValidUntil(new DateTimeImmutable());
         $invite->setHash($this->generateInviteHash());
 
         $this->entityManager->persist($invite);
         $this->entityManager->flush();
+
+        // trigger messenger
 
         return $invite;
     }
@@ -85,19 +93,66 @@ class InviteService
         return $returnData;
     }
 
-    public function acceptInvite(User $user, Invite $token): Invite
+    /** @throws AppException|ORMException */
+    public function acceptInvite(User $user, string $hash): Invite
     {
-        return $token;
+        $now    = new DateTimeImmutable();
+        $invite = $this->inviteRepository->findOneByHash($hash);
+
+        if(!$invite
+           || $invite->getStatus() !== InviteStatus::SENT
+           || $invite->getInvitee()->getUsername() !== $user->getUsername()) {
+            throw new AppException("", 403);
+        }
+
+        if ( $invite->getValidUntil() < $now ) {
+            throw new AppException("Expired", 406);
+        }
+
+        $invite->setStatus(InviteStatus::ACCEPTED);
+        $this->entityManager->flush();
+
+        // trigger messenger
+
+        return $invite;
     }
 
-    public function cancelInvite(User $user, Invite $token): Invite
+    public function rejectInvite(User $user, string $hash): Invite
     {
-        return $token;
+        $now    = new DateTimeImmutable();
+        $invite = $this->inviteRepository->findOneByHash($hash);
+
+        if(!$invite
+           || $invite->getStatus() !== InviteStatus::SENT
+           || $invite->getInvitee()->getUsername() !== $user->getUsername()) {
+            throw new AppException("", 403);
+        }
+
+        $invite->setStatus(InviteStatus::REJECTED);
+        $this->entityManager->flush();
+
+        // trigger messenger
+
+        return $invite;
     }
 
-    public function denyInvite(User $user, Invite $token): Invite
+    /** @throws AppException|ORMException */
+    public function cancelInvite(User $user, string $hash): Invite
     {
-        return $token;
+        $invite = $this->inviteRepository->findOneByHash($hash);
+
+        if(!$invite
+           || $invite->getStatus() !== InviteStatus::SENT
+           || $invite->getInviter()->getUsername() !== $user->getUsername()) {
+            throw new AppException("", 403);
+        }
+
+        $invite->setStatus(InviteStatus::DELETED);
+        $this->entityManager->flush();
+
+        // trigger messenger
+
+        return $invite;
     }
 
     /** @throws RuntimeException */

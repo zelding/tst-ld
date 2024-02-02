@@ -58,14 +58,13 @@ class ApiTest extends KernelTestCase
         $userRepo = static::getContainer()->get(UserRepository::class);
 
         $u1 = $userRepo->findOneByUsername('test_user_1');
-        $u2 = $userRepo->findOneByUsername('test_user_2');
 
-        $invitation = $inviteService->invite($u1, $u2);
+        $invitation = $inviteService->invite($u1, 'test_user_2');
 
         $this->assertEquals(InviteStatus::SENT, $invitation->getStatus());
 
         try {
-            $invitation = $inviteService->invite($u1, $u2);
+            $inviteService->invite($u1, 'test_user_2');
         }
         catch(AppException $exception) {
             static::assertEquals(406, $exception->getCode());
@@ -96,8 +95,7 @@ class ApiTest extends KernelTestCase
         };
 
         $u1 = $userRepo->findOneByUsername('test_user_1');
-        $u2 = $userRepo->findOneByUsername('test_user_2');
 
-        $fakeInviteService->invite($u1, $u2);
+        $fakeInviteService->invite($u1, 'test_user_2');
     }
 }

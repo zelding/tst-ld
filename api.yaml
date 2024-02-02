@@ -105,6 +105,10 @@ paths:
             responses:
                 201:
                     description: Created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Invite'
                 401:
                     description: Unauthorized
                     content:
@@ -221,6 +225,9 @@ components:
         Invite:
             type: object
             properties:
+                hash:
+                    type: string
+                    format: hash
                 inviter:
                     $ref: '#/components/schemas/User'
                 invitee:
