@@ -61,6 +61,9 @@ RUN set -eux; \
 		xdebug \
 	;
 
+RUN set -eux; \
+    composer install --no-cache --no-progress;
+
 COPY --link frankenphp/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--watch" ]
