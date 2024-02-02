@@ -45,6 +45,9 @@ jobs:
         name: Check HTTPS reachability
         run: curl -vk -o /dev/null https://localhost
       -
+        name: install composer things
+        run:  docker compose exec -T composer install --no-progress
+      -
         name: Create test database
         run: docker compose exec -T php bin/console -e test doctrine:database:create
       -
