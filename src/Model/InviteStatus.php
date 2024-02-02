@@ -9,4 +9,5 @@ enum InviteStatus : int
     case ACCEPTED = 2;
     case REJECTED = 4;
     case DELETED = 8;
+    case BLOCKED = 16;
 }

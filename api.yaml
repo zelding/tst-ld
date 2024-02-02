@@ -245,6 +245,5 @@ components:
             scheme: basic
 
         bearer_token:
-            type: apiKey
-            name: token
-            in:   query
+            type:   http
+            scheme: bearer

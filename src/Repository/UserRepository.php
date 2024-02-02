@@ -51,17 +51,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $qb = $this->createQueryBuilder('u');
 
         $qb->select('u, accept_out, accept_in, inv_in, inv_out, inu, outu')
-           ->innerJoin('u.invites', 'accept_out', Join::WITH, 'accept_out.status = :accepted')
-           ->innerJoin('accept_out.invitee', 'a1u')
+           ->leftJoin('u.invites', 'accept_out', Join::WITH, 'accept_out.status = :accepted')
+           ->leftJoin('accept_out.invitee', 'a1u')
 
-           ->innerJoin('u.invited', 'accept_in', Join::WITH, 'accept_in.status = :accepted')
-           ->innerJoin('accept_in.inviter', 'a2u')
+           ->leftJoin('u.invited', 'accept_in', Join::WITH, 'accept_in.status = :accepted')
+           ->leftJoin('accept_in.inviter', 'a2u')
 
-           ->innerJoin('u.invited', 'inv_out', Join::WITH, 'inv_out.status = :pending')
-           ->innerJoin('inv_out.invitee', 'inu')
+           ->leftJoin('u.invited', 'inv_out', Join::WITH, 'inv_out.status = :pending')
+           ->leftJoin('inv_out.invitee', 'inu')
 
-           ->innerJoin('u.invites', 'inv_in', Join::WITH, 'inv_in.status = :pending')
-           ->innerJoin('inv_in.inviter', 'outu')
+           ->leftJoin('u.invites', 'inv_in', Join::WITH, 'inv_in.status = :pending')
+           ->leftJoin('inv_in.inviter', 'outu')
 
            ->setParameter('accepted', InviteStatus::ACCEPTED)
            ->setParameter('pending', InviteStatus::SENT)

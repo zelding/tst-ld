@@ -16,7 +16,6 @@ class AuthTokenService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserRepository         $userRepository,
         private readonly AuthTokenRepository    $tokenRepository)
     {
     }
@@ -35,11 +34,11 @@ class AuthTokenService
         return $this->createNewToken($user);
     }
 
-    public function createNewToken(User $user): AuthToken
+    protected function createNewToken(User $user): AuthToken
     {
         $token = new AuthToken();
         $token->setUser($user);
-        $token->setValidUntil((new DateTimeImmutable())->modify('+1 hour'));
+        $token->setValidUntil((new DateTimeImmutable())->modify('+3 hour'));
         $token->setToken($this->generateUniqueHash());
 
         $this->entityManager->persist($token);
@@ -48,9 +47,9 @@ class AuthTokenService
         return $token;
     }
 
-    public function validateToken(User $user, string $token ): bool
+    public function validateToken(string $token ): ?AuthToken
     {
-        return null !== $this->tokenRepository->findActiveToken($user, $token);
+        return $this->tokenRepository->findValidToken($token);
     }
 
     protected function generateUniqueHash(): string

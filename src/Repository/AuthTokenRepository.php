@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\AuthToken;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -34,8 +35,8 @@ class AuthTokenRepository extends ServiceEntityRepository
            ->innerJoin('a.user', 'u')
            ->where('u.username = :username')
            ->andWhere('a.valid_until > :now')
-            //timezones!
-           ->setParameter('now', (new \DateTimeImmutable())->format('Y-m-d H:i:s'))
+            //timezones!?
+           ->setParameter('now', (new DateTimeImmutable())->format('Y-m-d H:i:s'))
            ->setParameter('username', $user->getUsername());
 
         if ( $token ) {
@@ -45,5 +46,21 @@ class AuthTokenRepository extends ServiceEntityRepository
 
         return $qb->getQuery()
                   ->getOneOrNullResult();
+    }
+
+    public function findValidToken(string $token): ?AuthToken
+    {
+        $qb = $this->createQueryBuilder('a');
+
+        $qb->select('a, u')
+            ->innerJoin('a.user', 'u')
+            ->andWhere('a.token = :token')
+            ->andWhere('a.valid_until > :now')
+            //timezones!?
+            ->setParameter('now', (new DateTimeImmutable())->format('Y-m-d H:i:s'))
+            ->setParameter('token', $token);
+
+        return $qb->getQuery()
+            ->getOneOrNullResult();
     }
 }

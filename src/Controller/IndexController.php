@@ -14,13 +14,11 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 class IndexController extends AbstractController
 {
     #[Route(path: "/")]
-    public function index(Request $request, #[CurrentUser] ?User $user, UserRepository $userRepository): JsonResponse
+    public function index(Request $request, #[CurrentUser] ?User $user): JsonResponse
     {
-        $userRepository->findAll();
-
         return $this->json([
             "request" => $request->query->all(),
-            "login"   => !$user,
+            "login"   => null !== $user,
             "id"      => $user?->getUserIdentifier()
         ]);
     }

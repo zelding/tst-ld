@@ -13,16 +13,31 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:
+            stateless: true
+
+        token:
+            pattern: ^/me
+            stateless: true
+            access_token:
+                token_handler: App\Security\AccessTokenHandler
+                token_extractors: header
+                provider: app_user_provider
+
+        login:
+            stateless: true
             json_login:
                 check_path: api_login
-                provider: app_user_provider
+                provider:   app_user_provider
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/me, roles: ROLE_USER }
-        - { path: ^/profile, roles: ROLE_USER }
+        - path:  ^/login$
+          roles: PUBLIC_ACCESS
+        - path: ^/me,
+          roles: ROLE_USER
+        - path:  ^/$
+          roles: PUBLIC_ACCESS
 
 when@test:
     security:
