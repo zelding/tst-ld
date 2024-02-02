@@ -46,7 +46,7 @@ jobs:
         run: curl -vk -o /dev/null https://localhost
       -
         name: force orm pack in - lol
-        run: docker compose exec -T php composer require symfony/orm-pack --no-scrips
+        run: docker compose exec -T php composer require symfony/orm-pack --no-scripts --no-progress
       -
         name: dump test conf
         run:  docker compose exec -T php composer dump-env test
