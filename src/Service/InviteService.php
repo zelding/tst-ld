@@ -4,17 +4,46 @@ namespace App\Service;
 
 use App\Entity\Invite;
 use App\Entity\User;
+use App\Exception\AppException;
 use App\Model\InviteStatus;
+use App\Repository\InviteRepository;
 use App\Repository\UserRepository;
-use Symfony\Component\Security\Core\User\UserInterface;
+use DateTimeImmutable;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
+use RuntimeException;
 
 class InviteService
 {
-    public function __construct(private UserRepository $userRepository) {}
+    public const int MAX_ITERATION = 30;
 
-    public function invite(User $user, User $suer)
+    public function __construct(
+        private readonly UserRepository $userRepository,
+        private readonly InviteRepository $inviteRepository,
+        private readonly EntityManagerInterface $entityManager
+    ) {}
+
+    /** @throws ORMException|AppException */
+    public function invite(User $user, User $suer): Invite
     {
-        //$this->tokenService->createNewToken($user);
+        if ($found = $this->inviteRepository->findExistingBetween($user, $suer)) {
+
+            if ( $found->getStatus() === InviteStatus::BLOCKED ) {
+                throw new AppException("Blocked connection", 409);
+            }
+
+            throw new AppException("Already invited or Invalid target", 406);
+        }
+
+        $invite = new Invite($user, $suer);
+        $invite->setStatus(InviteStatus::SENT);
+        $invite->setValidUntil(new DateTimeImmutable());
+        $invite->setHash($this->generateInviteHash());
+
+        $this->entityManager->persist($invite);
+        $this->entityManager->flush();
+
+        return $invite;
     }
 
     public function getUserInviteDataForProfile(User $user): array
@@ -56,18 +85,42 @@ class InviteService
         return $returnData;
     }
 
-    public function acceptInvite(User $user, Invite $token)
+    public function acceptInvite(User $user, Invite $token): Invite
     {
-
+        return $token;
     }
 
-    public function cancelInvite(User $user, Invite $token)
+    public function cancelInvite(User $user, Invite $token): Invite
     {
-
+        return $token;
     }
 
-    public function denyInvite(User $user, Invite $token)
+    public function denyInvite(User $user, Invite $token): Invite
     {
+        return $token;
+    }
 
+    /** @throws RuntimeException */
+    protected function generateInviteHash(): string
+    {
+        $counter = 0;
+        do {
+            $hash   = static::newHash();
+            $entity = $this->inviteRepository->findOneByHash($hash);
+            $counter++;
+        }
+        while ($entity && $counter < self::MAX_ITERATION);
+
+        if ( $counter === self::MAX_ITERATION) {
+            // this should trigger an SMS or something
+            throw new RuntimeException("No new unique hash could be generated");
+        }
+
+        return $hash;
+    }
+
+    protected static function newHash(): string
+    {
+        return hash('sha256', microtime(true));
     }
 }

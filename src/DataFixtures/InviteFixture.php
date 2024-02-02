@@ -12,47 +12,63 @@ use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 
 class InviteFixture extends Fixture implements DependentFixtureInterface
 {
+    public const string BAD_INVITE = "bad-invite-record";
+
+    public static string $badHash = "SAME-THING-ALWAYS";
+
     public function load(ObjectManager $manager): void
     {
-        $inviter = $this->getReference(UserFixture::TEST_USER);
+        $inviter = $this->getReference(UserFixture::TEST_USER, User::class);
 
         $long = new DateTimeImmutable();
         $long = $long->modify('+1 year');
 
         for($i = 0; $i < UserFixture::FAKE_USERS / 2; $i++) {
-            $name = sprintf('test_user_%0d', $i);
-
-            /** @var User $inviter */
-            $invitee = $this->getReference($name);
-
-            $invite = new Invite($inviter, $invitee);
-            $invite->setHash(hash('crc32', $i));
-            $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
-            $invite->setValidUntil($long);
+            $invite = $this->generateInvite($i, $inviter, $long);
 
             $manager->persist($invite);
         }
 
         for($i = UserFixture::FAKE_USERS / 2; $i < UserFixture::FAKE_USERS; $i++) {
-            $name = sprintf('test_user_%0d', $i);
-
-            /** @var User $inviter */
-            $invitee = $this->getReference($name);
-
-            $invite = new Invite($invitee, $inviter);
-            $invite->setHash(hash('crc32', $i));
-            $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
-            $invite->setValidUntil($long);
+            $invite = $this->generateInvite($i, $inviter, $long);
 
             $manager->persist($invite);
         }
 
+        $inviter = $this->getReference('test_user_3', User::class);
+        $invitee = $this->getReference('test_user_4', User::class);
+
+        $invite = new Invite($inviter, $invitee);
+        $invite->setHash(static::$badHash);
+        $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
+        $invite->setValidUntil($long);
+
+        $manager->persist($invite);
+
+        /** @see \App\Tests\Func\ApiTest::testDBFull */
+        $this->addReference(self::BAD_INVITE, $invite);
+
         $manager->flush();
     }
-    public function getDependencies()
+    public function getDependencies(): array
     {
         return [
             UserFixture::class
         ];
+    }
+
+    protected function generateInvite(int $i, User $inviter, DateTimeImmutable $long): Invite
+    {
+        $name = sprintf('test_user_%0d', $i);
+
+        /** @var User $inviter */
+        $invitee = $this->getReference($name, User::class);
+
+        $invite = new Invite($inviter, $invitee);
+        $invite->setHash(hash('crc32', $i));
+        $invite->setStatus($i % 5 ? InviteStatus::SENT : InviteStatus::ACCEPTED);
+        $invite->setValidUntil($long);
+
+        return $invite;
     }
 }

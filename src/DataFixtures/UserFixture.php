@@ -17,6 +17,12 @@ class UserFixture extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        $user = new User(self::TEST_USER);
+        $user->setPassword($this->hasher->hashPassword($user, 'asdasd'));
+        $manager->persist($user);
+
+        $this->addReference(self::TEST_USER, $user);
+
         for ($i = 0; $i < self::FAKE_USERS; $i++) {
             $name = sprintf('test_user_%0d', $i);
 
@@ -27,12 +33,6 @@ class UserFixture extends Fixture
 
             $this->addReference($name, $user);
         }
-
-        $user = new User('test_user');
-        $user->setPassword($this->hasher->hashPassword($user, 'asdasd'));
-        $manager->persist($user);
-
-        $this->addReference(self::TEST_USER, $user);
 
         $manager->flush();
     }

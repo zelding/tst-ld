@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Invite;
+use App\Entity\User;
+use App\Model\InviteStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,28 +24,38 @@ class InviteRepository extends ServiceEntityRepository
         parent::__construct($registry, Invite::class);
     }
 
-//    /**
-//     * @return Token[] Returns an array of Token objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @throws NonUniqueResultException
+     */
+    public function findExistingBetween(User $user, User $otherUser): ?Invite
+    {
+        $qb = $this->createQueryBuilder('i');
 
-//    public function findOneBySomeField($value): ?Token
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $qb->select('i')
+            ->innerJoin('i.inviter', 'inviter')
+            ->innerJoin('i.invitee', 'invitee')
+            //->where('i.status <> :deleted')
+            ->andWhere('i.status <> :blocked')
+            ->andWhere($qb->expr()->in('inviter.username', [$user->getUserIdentifier(), $otherUser->getUserIdentifier()]))
+            ->andWhere($qb->expr()->in('invitee.username', [$user->getUserIdentifier(), $otherUser->getUserIdentifier()]))
+            //->setParameter('deleted', InviteStatus::DELETED)
+            ->setParameter('blocked', InviteStatus::BLOCKED);
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    /**
+     * @throws NonUniqueResultException
+     */
+    public function findOneByHash(string $hash): ?Invite
+    {
+        $qb = $this->createQueryBuilder('i');
+
+        $qb->where('i.hash = :hash')
+            ->andWhere('i.status <> :deleted')
+            ->setParameter('deleted', InviteStatus::DELETED)
+            ->setParameter('hash', $hash);
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
 }
