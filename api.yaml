@@ -59,6 +59,8 @@ paths:
                             schema:
                                 type: object
                                 properties:
+                                    me:
+                                        $ref: '#/components/schemas/User'
                                     friends:
                                         type: array
                                         items:
@@ -211,6 +213,8 @@ components:
         User:
             type: object
             properties:
+                id:
+                    type: integer
                 username:
                     type: string
 
@@ -241,6 +245,6 @@ components:
             scheme: basic
 
         bearer_token:
-            type:   http
-            scheme: bearer
-            in: query
+            type: apiKey
+            name: token
+            in:   query

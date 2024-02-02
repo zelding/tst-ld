@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Model\InviteStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -39,28 +41,34 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-//    /**
-//     * @return User[] Returns an array of User objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @param User $user
+     *
+     * @return array{0: User}
+     */
+    public function getUserWithInvites(User $user): array
+    {
+        $qb = $this->createQueryBuilder('u');
 
-//    public function findOneBySomeField($value): ?User
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $qb->select('u, accept_out, accept_in, inv_in, inv_out, inu, outu')
+           ->innerJoin('u.invites', 'accept_out', Join::WITH, 'accept_out.status = :accepted')
+           ->innerJoin('accept_out.invitee', 'a1u')
+
+           ->innerJoin('u.invited', 'accept_in', Join::WITH, 'accept_in.status = :accepted')
+           ->innerJoin('accept_in.inviter', 'a2u')
+
+           ->innerJoin('u.invited', 'inv_out', Join::WITH, 'inv_out.status = :pending')
+           ->innerJoin('inv_out.invitee', 'inu')
+
+           ->innerJoin('u.invites', 'inv_in', Join::WITH, 'inv_in.status = :pending')
+           ->innerJoin('inv_in.inviter', 'outu')
+
+           ->setParameter('accepted', InviteStatus::ACCEPTED)
+           ->setParameter('pending', InviteStatus::SENT)
+
+           ->andWhere('u.username = :username')
+           ->setParameter('username', $user->getUsername());
+
+        return $qb->getQuery()->getResult();
+    }
 }

@@ -6,12 +6,13 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Index(columns: ['username'], name: "username_idx")]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -32,18 +33,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToMany(mappedBy: "inviter", targetEntity: Invite::class)]
     #[ORM\JoinColumn(name: "id", referencedColumnName: "user_from")]
-    /** @var Collection<Invite> */
+    /**
+     * Invitatin sent
+     * @var Collection<Invite>
+     */
     private Collection $invites;
 
     #[ORM\OneToMany(mappedBy: "invitee", targetEntity: Invite::class)]
     #[ORM\JoinColumn(name: "id", referencedColumnName: "user_to")]
-    /** @var Collection<Invite> */
+    /**
+     * invitation recieved
+     * @var Collection<Invite>
+     */
     private Collection $invited;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: AuthToken::class, orphanRemoval: true)]
+    private Collection $authTokens;
 
     public function __construct(?string $username = null, ?string $password = null)
     {
-        $this->invites = new ArrayCollection();
-        $this->invited = new ArrayCollection();
+        $this->invites    = new ArrayCollection();
+        $this->invited    = new ArrayCollection();
+        $this->authTokens = new ArrayCollection();
 
         if ($username) {
             $this->setUsername($username);
@@ -52,6 +63,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($password) {
             $this->setPassword($password);
         }
+    }
+
+    #[Override]
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'id'       => $this->id,
+            'username' => $this->username
+        ];
     }
 
     public function getId(): ?int
@@ -124,13 +144,45 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
+    /** @return Collection<Invite> */
     public function getInvites(): Collection
     {
         return $this->invites;
     }
 
+    /** @return Collection<Invite> */
     public function getInvited(): Collection
     {
         return $this->invited;
+    }
+
+    /**
+     * @return Collection<int, AuthToken>
+     */
+    public function getAuthTokens(): Collection
+    {
+        return $this->authTokens;
+    }
+
+    public function addAuthToken(AuthToken $authToken): static
+    {
+        if (!$this->authTokens->contains($authToken)) {
+            $this->authTokens->add($authToken);
+            $authToken->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAuthToken(AuthToken $authToken): static
+    {
+        if ($this->authTokens->removeElement($authToken)) {
+            // set the owning side to null (unless already changed)
+            if ($authToken->getUser() === $this) {
+                $authToken->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

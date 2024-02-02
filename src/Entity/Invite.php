@@ -6,13 +6,14 @@ use App\Model\InviteStatus;
 use App\Repository\InviteRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
+use Override;
 
 /**
  * Invite token
  */
 #[ORM\Entity(repositoryClass: InviteRepository::class)]
 #[ORM\Index(name: "validaity_idx", columns: ['valid_until'])]
-class Invite
+class Invite implements \JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -33,16 +34,33 @@ class Invite
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "invites")]
     #[ORM\JoinColumn(name: "user_from", referencedColumnName: "id")]
+    /**
+     * Owner / Creator
+     */
     private User|null $inviter;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: "invited")]
     #[ORM\JoinColumn(name: "user_to", referencedColumnName: "id")]
+    /**
+     * Person invited by the inviter
+     */
     private User|null $invitee;
 
-    public function __construct(User $inviter, User $invitee) {
+    public function __construct(User $inviter, User $invitee)
+    {
         $this->setInviter($inviter);
         $this->setInvitee($invitee);
         $this->setCreatedAt(new DateTimeImmutable());
+    }
+
+    #[Override]
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'id'      => $this->id,
+            'inviter' => $this->inviter,
+            'invitee' => $this->invitee
+        ];
     }
 
     public function getId(): ?int
